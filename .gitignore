@@ -1,0 +1,26 @@
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+credentials*.json
+service-account*.json
+client_secret*.json
+outputs/
+result/
+raw traffic data/
+raw_traffic_data/
+traffic_observations_*.csv
+hourly_traffic_summary*.csv
+peak_hour_summary*.csv
+junction_hourly_traffic_summary*.csv
+junction_peak_hour_summary*.csv
+weekly_hourly_traffic_summary*.csv
+weekly_peak_hour_summary*.csv
+junction_weekly_hourly_traffic_summary*.csv
+junction_weekly_peak_hour_summary*.csv
+.pytest_cache/
