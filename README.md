@@ -140,6 +140,148 @@ result/ traffic summaries
 analysed_data/complete_traffic_analysis.py
 ```
 
+## How to Use
+
+Follow this order when running the project from a fresh clone.
+
+### Step 1: Install Dependencies
+
+Open PowerShell inside the repository folder:
+
+```powershell
+cd "path\to\O_D_using_Road_junction_coordinates"
+```
+
+Create and activate a virtual environment:
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+```
+
+Install the required Python packages:
+
+```powershell
+python -m pip install -r requirements.txt
+```
+
+### Step 2: Add Your Google API Key
+
+Set your Google Maps API key in PowerShell:
+
+```powershell
+$env:GOOGLE_MAPS_API_KEY="YOUR_API_KEY_HERE"
+```
+
+The key must have access to the Google Routes API. Keep the real key out of
+GitHub.
+
+### Step 3: Prepare Junction Coordinates
+
+Edit `junctions.csv` with your junction IDs and coordinates:
+
+```csv
+junction,lat,long
+1,9.84754739,78.48282678
+2,9.846438744,78.6351097
+```
+
+If you already know the road direction, you can add `bearing`, or both
+`back_bearing` and `front_bearing`. If bearings are not provided, the generator
+uses the row order in `junctions.csv` to estimate direction.
+
+### Step 4: Generate Origin-Destination Points
+
+Run the OD generator:
+
+```powershell
+python .\generate_origin_destination.py --input .\junctions.csv --output-dir .\outputs --distance-km 5
+```
+
+This creates:
+
+```text
+outputs/origin.csv
+outputs/destination.csv
+outputs/origin_destination.csv
+```
+
+Use `outputs/origin_destination.csv` as the input for traffic collection.
+
+### Step 5: Test Traffic Collection
+
+Before collecting a full dataset, test one generated route:
+
+```powershell
+python .\traffic_collector.py --junctions .\outputs\origin_destination.csv --traffic-model BEST_GUESS --limit 1
+```
+
+If the API key and coordinates are valid, the script prints an `OK` status and
+writes a raw observation CSV.
+
+### Step 6: Collect 24-Hour Traffic Data
+
+Collect hourly traffic observations for one full day:
+
+```powershell
+python .\traffic_collector.py --junctions .\outputs\origin_destination.csv --traffic-model BEST_GUESS --daily-24h --daily-start-local "2026-09-03T00:00" --output .\traffic_observations_best_guess.csv
+```
+
+Google driving departure times must be now or in the future, so choose a future
+date when collecting 24-hour data.
+
+To compare all three Google traffic models, run:
+
+```powershell
+python .\traffic_collector.py --junctions .\outputs\origin_destination.csv --traffic-model BEST_GUESS --daily-24h --daily-start-local "2026-09-03T00:00" --output .\traffic_observations_best_guess.csv
+python .\traffic_collector.py --junctions .\outputs\origin_destination.csv --traffic-model OPTIMISTIC --daily-24h --daily-start-local "2026-09-03T00:00" --output .\traffic_observations_optimistic.csv
+python .\traffic_collector.py --junctions .\outputs\origin_destination.csv --traffic-model PESSIMISTIC --daily-24h --daily-start-local "2026-09-03T00:00" --output .\traffic_observations_pessimistic.csv
+```
+
+### Step 7: Analyze Daily Traffic
+
+Create hourly summaries and peak-hour reports:
+
+```powershell
+python .\traffic_hourly_analysis.py --date "2026-09-03"
+```
+
+The output is saved under `result/`:
+
+```text
+result/
+  2026-09-03_hourly_data/
+    hourly_traffic_summary_2026-09-03.csv
+    peak_hour_summary_2026-09-03.csv
+    junction_hourly_traffic_summary_2026-09-03.csv
+    junction_peak_hour_summary_2026-09-03.csv
+```
+
+Open `junction_peak_hour_summary_<date>.csv` to see the worst traffic hour for
+each junction. Open `hourly_traffic_summary_<date>.csv` to see the network-level
+hourly pattern.
+
+### Step 8: Analyze Weekly Traffic
+
+After collecting 24-hour data for every date in a week, run:
+
+```powershell
+python .\traffic_hourly_analysis.py --start-date "2026-09-03" --end-date "2026-09-09"
+```
+
+Weekly summaries are written under `result/` in a date-range folder.
+
+### Step 9: Create Final Analysis Outputs
+
+Run the complete analysis script:
+
+```powershell
+python .\analysed_data\complete_traffic_analysis.py
+```
+
+This creates cleaned CSV summaries, plots, and the final workbook-style report
+inside `analysed_data/`.
+
 ## Requirements
 
 - Python 3.9 or newer
@@ -227,7 +369,7 @@ junction,junction_lat,junction_long,origin_lat,origin_long,destination_lat,desti
 Run one traffic model:
 
 ```powershell
-python .\traffic_collector.py --junctions .\outputs\origin_destination.csv --traffic-model BEST_GUESS --daily-24h --daily-start-local "2026-09-02T00:00" --output .\traffic_observations_best_guess.csv
+python .\traffic_collector.py --junctions .\outputs\origin_destination.csv --traffic-model BEST_GUESS --daily-24h --daily-start-local "2026-09-03T00:00" --output .\traffic_observations_best_guess.csv
 ```
 
 Google driving departure times must be now or in the future, so use a future
@@ -236,9 +378,9 @@ date when collecting a full 24-hour dataset.
 Run all three Google traffic models:
 
 ```powershell
-python .\traffic_collector.py --junctions .\outputs\origin_destination.csv --traffic-model BEST_GUESS --daily-24h --daily-start-local "2026-09-02T00:00" --output .\traffic_observations_best_guess.csv
-python .\traffic_collector.py --junctions .\outputs\origin_destination.csv --traffic-model OPTIMISTIC --daily-24h --daily-start-local "2026-09-02T00:00" --output .\traffic_observations_optimistic.csv
-python .\traffic_collector.py --junctions .\outputs\origin_destination.csv --traffic-model PESSIMISTIC --daily-24h --daily-start-local "2026-09-02T00:00" --output .\traffic_observations_pessimistic.csv
+python .\traffic_collector.py --junctions .\outputs\origin_destination.csv --traffic-model BEST_GUESS --daily-24h --daily-start-local "2026-09-03T00:00" --output .\traffic_observations_best_guess.csv
+python .\traffic_collector.py --junctions .\outputs\origin_destination.csv --traffic-model OPTIMISTIC --daily-24h --daily-start-local "2026-09-03T00:00" --output .\traffic_observations_optimistic.csv
+python .\traffic_collector.py --junctions .\outputs\origin_destination.csv --traffic-model PESSIMISTIC --daily-24h --daily-start-local "2026-09-03T00:00" --output .\traffic_observations_pessimistic.csv
 ```
 
 For a quick test:
@@ -252,24 +394,24 @@ python .\traffic_collector.py --junctions .\outputs\origin_destination.csv --tra
 After data collection, create hourly and peak-hour summaries:
 
 ```powershell
-python .\traffic_hourly_analysis.py --date "2026-09-02"
+python .\traffic_hourly_analysis.py --date "2026-09-03"
 ```
 
 To analyze specific raw files:
 
 ```powershell
-python .\traffic_hourly_analysis.py --date "2026-09-02" --inputs .\traffic_observations_best_guess.csv .\traffic_observations_optimistic.csv .\traffic_observations_pessimistic.csv
+python .\traffic_hourly_analysis.py --date "2026-09-03" --inputs .\traffic_observations_best_guess.csv .\traffic_observations_optimistic.csv .\traffic_observations_pessimistic.csv
 ```
 
 Outputs are written under `result/`, for example:
 
 ```text
 result/
-  2026-09-02_hourly_data/
-    hourly_traffic_summary_2026-09-02.csv
-    peak_hour_summary_2026-09-02.csv
-    junction_hourly_traffic_summary_2026-09-02.csv
-    junction_peak_hour_summary_2026-09-02.csv
+  2026-09-03_hourly_data/
+    hourly_traffic_summary_2026-09-03.csv
+    peak_hour_summary_2026-09-03.csv
+    junction_hourly_traffic_summary_2026-09-03.csv
+    junction_peak_hour_summary_2026-09-03.csv
 ```
 
 ## 5. Weekly Analysis
@@ -277,7 +419,7 @@ result/
 Collect 24-hour data for each date in the week, then run:
 
 ```powershell
-python .\traffic_hourly_analysis.py --start-date "2026-09-02" --end-date "2026-09-08"
+python .\traffic_hourly_analysis.py --start-date "2026-09-03" --end-date "2026-09-09"
 ```
 
 This creates weekly network-level and junction-level summaries under `result/`.
