@@ -302,7 +302,6 @@ Set your Google Maps API key:
 $env:GOOGLE_MAPS_API_KEY="YOUR_API_KEY_HERE"
 ```
 
-Do not commit your real API key to GitHub.
 
 ## 1. Prepare Junction Coordinates
 
